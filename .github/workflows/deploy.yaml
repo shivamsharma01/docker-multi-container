@@ -1,0 +1,59 @@
+name: Deploy Multi-Container Project
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_ID }}          
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker --quiet
+      
+      - name: Build Docker image and test
+        run: docker build -t gcr.io/${{ secrets.PROJECT_ID }}/react-test -f ./client/Dockerfile.dev .
+          
+      - name: Run test suite
+        run: docker run -e CI=true gcr.io/${{ secrets.PROJECT_ID }}/react-test npm test
+
+      - name: Finalization
+        run: |
+        docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-client ./client
+        docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-nginx ./nginx
+        docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-server ./server
+        docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-worker ./worker
+                
+      # - name: Push Docker image
+      #   run: docker push $IMAGE_NAME_DEPLOY
+      
+      # - id: deploy
+      #   name: Deploy Docker image
+      #   uses: "google-github-actions/deploy-cloudrun@v0"
+      #   with:
+      #     image: ${{ env.IMAGE_NAME_DEPLOY }}
+      #     region: asia-east1
+      #     service: app
+      #     flags: --port=80
+
+      # # Example of using the output
+      # - name: Test URL
+      #   run: curl "${{ steps.deploy.outputs.url }}"
