@@ -28,7 +28,7 @@ jobs:
 
       - name: Configure Docker
         run: gcloud auth configure-docker --quiet
-      
+
       - name: Build Docker image and test
         run: docker build -t gcr.io/${{ secrets.PROJECT_ID }}/react-test -f ./client/Dockerfile.dev ./client
           
@@ -42,8 +42,12 @@ jobs:
           docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-server ./server
           docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-worker ./worker
                 
-      # - name: Push Docker image
-      #   run: docker push $IMAGE_NAME_DEPLOY
+      - name: Push Docker image
+        run: |
+          docker push gcr.io/${{ secrets.PROJECT_ID }}/multi-client
+          docker push gcr.io/${{ secrets.PROJECT_ID }}/multi-nginx
+          docker push gcr.io/${{ secrets.PROJECT_ID }}/multi-server
+          docker push gcr.io/${{ secrets.PROJECT_ID }}/multi-worker
       
       # - id: deploy
       #   name: Deploy Docker image
