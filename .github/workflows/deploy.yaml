@@ -30,7 +30,7 @@ jobs:
         run: gcloud auth configure-docker --quiet
       
       - name: Build Docker image and test
-        run: docker build -t gcr.io/${{ secrets.PROJECT_ID }}/react-test -f ./client/Dockerfile.dev .
+        run: docker build -t gcr.io/${{ secrets.PROJECT_ID }}/react-test -f ./client/Dockerfile.dev ./client
           
       - name: Run test suite
         run: docker run -e CI=true gcr.io/${{ secrets.PROJECT_ID }}/react-test npm test
