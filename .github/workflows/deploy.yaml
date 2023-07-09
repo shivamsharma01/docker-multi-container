@@ -15,39 +15,51 @@ jobs:
       contents: 'read'
       id-token: 'write'
 
+    env:
+      ARTIFACT_REPO_NAME: docker-repo
+      ARTIFACT_REPO_REGION: us-central1
+      
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - id: checkout
+        name: Checkout repository
         uses: actions/checkout@v2
-        
-      - name: Authenticate with Google Cloud
+      
+      - id: auth  
+        name: Authenticate with Google Cloud
         uses: google-github-actions/auth@v0
         with:
+          token_format: access_token
           workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER_ID }}          
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          access_token_lifetime: 600s
 
-      - name: Configure Docker
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - name: Login to Artifact Registry
+        uses: docker/login-action@v1
+        with:
+          registry: $ARTIFACT_REPO_REGION
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
 
       - name: Build Docker image and test
-        run: docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/react-test -f ./client/Dockerfile.dev ./client
+        run: docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/react-test -f ./client/Dockerfile.dev ./client
           
       - name: Run test suite
-        run: docker run -e CI=true us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/react-test npm test
+        run: docker run -e CI=true ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/react-test npm test
 
       - name: Finalization
         run: |
-          docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-client ./client
-          docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-nginx ./nginx
-          docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-server ./server
-          docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-worker ./worker
+          docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-client ./client
+          docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-nginx ./nginx
+          docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-server ./server
+          docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-worker ./worker
                 
       - name: Push Docker image
         run: |
-          docker push us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-client
-          docker push us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-nginx
-          docker push us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-server
-          docker push us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-worker
+          docker push ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-client
+          docker push ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-nginx
+          docker push ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-server
+          docker push ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-worker
       
       # - id: deploy
       #   name: Deploy Docker image
