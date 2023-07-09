@@ -37,10 +37,10 @@ jobs:
 
       - name: Finalization
         run: |
-        docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-client ./client
-        docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-nginx ./nginx
-        docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-server ./server
-        docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-worker ./worker
+          docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-client ./client
+          docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-nginx ./nginx
+          docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-server ./server
+          docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-worker ./worker
                 
       # - name: Push Docker image
       #   run: docker push $IMAGE_NAME_DEPLOY
