@@ -30,24 +30,24 @@ jobs:
         run: gcloud auth configure-docker --quiet
 
       - name: Build Docker image and test
-        run: docker build -t gcr.io/${{ secrets.PROJECT_ID }}/react-test -f ./client/Dockerfile.dev ./client
+        run: docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/react-test -f ./client/Dockerfile.dev ./client
           
       - name: Run test suite
-        run: docker run -e CI=true gcr.io/${{ secrets.PROJECT_ID }}/react-test npm test
+        run: docker run -e CI=true us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/react-test npm test
 
       - name: Finalization
         run: |
-          docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-client ./client
-          docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-nginx ./nginx
-          docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-server ./server
-          docker build -t gcr.io/${{ secrets.PROJECT_ID }}/multi-worker ./worker
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-client ./client
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-nginx ./nginx
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-server ./server
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-worker ./worker
                 
       - name: Push Docker image
         run: |
-          docker push gcr.io/${{ secrets.PROJECT_ID }}/multi-client
-          docker push gcr.io/${{ secrets.PROJECT_ID }}/multi-nginx
-          docker push gcr.io/${{ secrets.PROJECT_ID }}/multi-server
-          docker push gcr.io/${{ secrets.PROJECT_ID }}/multi-worker
+          docker push us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-client
+          docker push us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-nginx
+          docker push us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-server
+          docker push us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/multi-worker
       
       # - id: deploy
       #   name: Deploy Docker image
