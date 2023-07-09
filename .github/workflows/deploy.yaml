@@ -37,7 +37,7 @@ jobs:
       - name: Login to Artifact Registry
         uses: docker/login-action@v1
         with:
-          registry: $ARTIFACT_REPO_REGION
+          registry: ${{ env.ARTIFACT_REPO_REGION }}
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
 
