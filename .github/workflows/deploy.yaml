@@ -26,36 +26,36 @@ jobs:
         uses: google-github-actions/auth@v0
         with:
           token_format: access_token
-          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER_LOCATION }}          
-          service_account: ${{ env.SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER_LOCATION }}          
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
           access_token_lifetime: 600s
 
       - name: Login to Artifact Registry
         uses: docker/login-action@v1
         with:
-          registry: ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev
+          registry: ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
 
       - name: Build Docker image and test
-        run: docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/react-test -f ./client/Dockerfile.dev ./client
+        run: docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/react-test -f ./client/Dockerfile.dev ./client
           
       - name: Run test suite
-        run: docker run -e CI=true ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/react-test npm test
+        run: docker run -e CI=true ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/react-test npm test
 
       - name: Finalization
         run: |
-          docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-client ./client
-          docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-nginx ./nginx
-          docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-server ./server
-          docker build -t ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-worker ./worker
+          docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-client ./client
+          docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-nginx ./nginx
+          docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-server ./server
+          docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-worker ./worker
                 
       - name: Push Docker image
         run: |
-          docker push ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-client
-          docker push ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-nginx
-          docker push ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-server
-          docker push ${{ env.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.ARTIFACT_REPO_NAME }}/multi-worker
+          docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-client
+          docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-nginx
+          docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-server
+          docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-worker
       
       # - id: deploy
       #   name: Deploy Docker image
