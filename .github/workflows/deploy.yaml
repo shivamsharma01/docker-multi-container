@@ -57,6 +57,17 @@ jobs:
           docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-server
           docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-worker
       
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+        with:
+          project_id: '${{ vars.PROJECT_ID }}'
+
+      - name: 'Create Cloud Deploy release'
+        uses: 'google-github-actions/deploy-appengine@v1'
+        with:
+          project_id: '${{ vars.PROJECT_ID }}'
+          flags: '--stop-previous-version --promote --verbosity'
+
       # - id: deploy
       #   name: Deploy Docker image
       #   uses: "google-github-actions/deploy-cloudrun@v0"
