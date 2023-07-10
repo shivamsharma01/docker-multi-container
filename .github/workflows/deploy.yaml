@@ -66,7 +66,7 @@ jobs:
         uses: 'google-github-actions/deploy-appengine@v1'
         with:
           project_id: '${{ vars.PROJECT_ID }}'
-          flags: '--stop-previous-version --promote --verbosity'
+          flags: '--stop-previous-version --promote --verbosity=debug'
 
       # - id: deploy
       #   name: Deploy Docker image
