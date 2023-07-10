@@ -30,52 +30,79 @@ jobs:
           service_account: ${{ vars.SERVICE_ACCOUNT }}
           access_token_lifetime: 600s
 
-      - name: Login to Artifact Registry
+      - id: login
+        name: Login to Artifact Registry
         uses: docker/login-action@v1
         with:
           registry: ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev
           username: oauth2accesstoken
           password: ${{ steps.auth.outputs.access_token }}
 
-      - name: Build Docker image and test
+      - id: build_dev
+        name: Build Docker image and test
         run: docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/react-test -f ./client/Dockerfile.dev ./client
-          
-      - name: Run test suite
+
+      - id: test
+        name: Run test suite
         run: docker run -e CI=true ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/react-test npm test
 
-      - name: Finalization
+      - id: build_final
+        name: Finalization
         run: |
           docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-client ./client
           docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-nginx ./nginx
           docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-server ./server
           docker build -t ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-worker ./worker
-                
-      - name: Push Docker image
+
+      - id: push
+        name: Push Docker image
         run: |
           docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-client
           docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-nginx
           docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-server
           docker push ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.ARTIFACT_REPO_NAME }}/multi-worker
+
+  deploy:
+    runs-on: ubuntu-latest    
+    steps:
+      - id: auth  
+        name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v0
+        with:
+          token_format: access_token
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER_LOCATION }}          
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+          access_token_lifetime: 600s
+
+      - id: login
+        name: Login to Artifact Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ vars.ARTIFACT_REPO_REGION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
       
-      - name: 'Set up Cloud SDK'
+      - id: setup_sdk
+        name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
         with:
           project_id: '${{ vars.PROJECT_ID }}'
 
-      - name: 'Create Cloud Deploy release'
-        uses: 'google-github-actions/deploy-appengine@v1'
+      - id: deploy_postgres
+        name: Deploy Postgres Latest
+        uses: "google-github-actions/deploy-cloudrun@v0"
         with:
-          project_id: '${{ vars.PROJECT_ID }}'
-          flags: '--stop-previous-version --promote --verbosity=debug'
+          image: "postgres:latest"
+          env_vars: |
+            POSTGRES_PASSWORD=postgres_password
+          service: 'postgres'
 
-      # - id: deploy
-      #   name: Deploy Docker image
-      #   uses: "google-github-actions/deploy-cloudrun@v0"
-      #   with:
-      #     image: ${{ env.IMAGE_NAME_DEPLOY }}
-      #     region: asia-east1
-      #     service: app
-      #     flags: --port=80
+      - id: deploy_redis
+        name: Deploy Redis Latest
+        uses: "google-github-actions/deploy-cloudrun@v0"
+        with:
+          image: "redis:latest"
+          service: 'redis'
 
       # # Example of using the output
       # - name: Test URL
